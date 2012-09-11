@@ -134,10 +134,32 @@ class MongoPy(object):
                 match = 0
                 break
             elif query[key] != doc[key]:
-                match = 0
-                break
+                # op queries will be a dict with one key in the op section
+                # ex. {'key': {'$gte': 1}}
+                if isinstance(query[key], dict) and len(query[key].keys()) == 1:
+                    op, comp = query[key].items()[0]
+                    if not self._kv_keyword_compare(op, comp, doc[key]):
+                        match = 0
+                        break
+                else:
+                    match = 0
+                    break
 
         return True if match else False
+
+    def _kv_keyword_compare(self, operation, compare, value):
+        self.FIND_OPERATIONS = {
+            '$gte': self._find_operation_gte,
+            '$gt': self._find_operation_gt,
+            '$lte': self._find_operation_lte,
+            '$lt': self._find_operation_lt,
+            '$in': self._find_operation_in,
+        }
+
+        if not operation in self.FIND_OPERATIONS:
+            return False
+
+        return self.FIND_OPERATIONS[operation](compare, value)
 
     def _remove_index_for(self, item):
         for key in item:
@@ -186,6 +208,26 @@ class MongoPy(object):
             kw_func(doc, key, d_value[d_key])
         else:
             doc[key] = d_value
+
+    # find operations
+
+    def _find_operation_gte(self, compare, value):
+        # type checks?
+        return value >= compare
+
+    def _find_operation_gt(self, compare, value):
+        return value > compare
+
+    def _find_operation_lte(self, compare, value):
+        return value <= compare
+
+    def _find_operation_lt(self, compare, value):
+        return value < compare
+
+    def _find_operation_in(self, compare, value):
+        return value in compare
+
+    # update operations
 
     def _pop_index_from_key(self, doc, key, value):
         doc[key].pop(value)
