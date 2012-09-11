@@ -38,6 +38,13 @@ Finding:
     >>> db.find_one({'_id': '15400048366191294602'})
     {'_id': u'15400048366191294602', 'name': 'Goliath', 'level': 0}
 
+    >>> db.find({'level': {'$in': [0,1,2,3]}})
+    [{'_id': u'15400048366191294602', 'name': 'Goliath', 'level': 0}]
+    >>> db.find({'level': {'$lte': [7]}})
+    [{'_id': u'8491991710235950406', 'name': 'David', 'level': 6}, {'_id': u'15400048366191294602', 'name': 'Goliath', 'level': 0}]
+    >>> db.find_one({'level': {'$gt': 4}})
+    {'_id': u'8491991710235950406', 'name': 'David', 'level': 6}
+
 Updating:
 
     >>> db.update({'name': 'David'}, {'level': {'$inc': 1}})
