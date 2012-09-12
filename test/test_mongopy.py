@@ -11,7 +11,7 @@ class MongoPyTestCases(TestCase):
 
     def _create_test_records(self):
         self._new_fixtures = [
-            {'user': 'david', 'level': 7, 'authed': True, 'perms': []},
+            {'user': 'david', 'level': 7, 'authed': True, 'perms': [], 'x':1},
             {'user': 'adam', 'level': 5, 'authed': True, 'perms': [
                 'a','b','c','d']},
             {'user': 'saul', 'level': 2, 'authed': False, 'perms': [], 'a':5},
@@ -26,8 +26,15 @@ class MongoPyTestCases(TestCase):
         self.store = MongoPy()
         self._create_test_records()
 
+    def test_operation_all(self):
+        doc = self.store.find_one({'perms': {'$all': ['a','c','d']}})
+        assert doc['user'] == 'adam'
+
     def test_operation_in(self):
         assert self.store.find_one({'user': 'adam', 'level': {'$in': [1,2,5]}})
+
+    def test_operation_ne(self):
+        assert self.store.find({'user': 'adam', 'level': {'$ne': 100}})
 
     def test_operation_gte(self):
         assert self.store.find_one({'user': 'adam', 'level': {'$gte': 1}})

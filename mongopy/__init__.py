@@ -20,6 +20,26 @@ class MongoPy(object):
 
         self.ensure_index(self._ID_KEY) # create an index for _ID_KEY
 
+        self.find_ops = {
+            '$gte': self._find_operation_gte,
+            '$gt': self._find_operation_gt,
+            '$lte': self._find_operation_lte,
+            '$lt': self._find_operation_lt,
+            '$ne': self._find_operation_ne,
+            '$in': self._find_operation_in,
+            '$all': self._find_operation_all,
+        }
+
+        self.update_ops = {
+            '$push': self._push_value_onto_key,
+            '$pop': self._pop_index_from_key,
+            '$inc': self._increment_value_of_key,
+            '$dec': self._decrement_value_of_key,
+            '$set': self._set_value_of_key,
+            '$unset': self._unset_key,
+            }
+
+
     # public:
 
     def insert(self, item):
@@ -53,15 +73,6 @@ class MongoPy(object):
     def update(self, query, updates):
         if not isinstance(query, dict): raise TypeError('Query type: dict')
         if not isinstance(updates, dict): raise TypeError('Updates type: dict')
-
-        self.KEYWORDS = {
-            '$push': self._push_value_onto_key,
-            '$pop': self._pop_index_from_key,
-            '$inc': self._increment_value_of_key,
-            '$dec': self._decrement_value_of_key,
-            '$set': self._set_value_of_key,
-            '$unset': self._unset_key,
-            }
 
         docs = self.find(query)
         if not docs: return # no documents matched the query
@@ -148,18 +159,11 @@ class MongoPy(object):
         return True if match else False
 
     def _kv_keyword_compare(self, operation, compare, value):
-        self.FIND_OPERATIONS = {
-            '$gte': self._find_operation_gte,
-            '$gt': self._find_operation_gt,
-            '$lte': self._find_operation_lte,
-            '$lt': self._find_operation_lt,
-            '$in': self._find_operation_in,
-        }
 
-        if not operation in self.FIND_OPERATIONS:
+        if not operation in self.find_ops:
             return False
 
-        return self.FIND_OPERATIONS[operation](compare, value)
+        return self.find_ops[operation](compare, value)
 
     def _remove_index_for(self, item):
         for key in item:
@@ -203,7 +207,7 @@ class MongoPy(object):
         # operations will have only one key
         # i.e. {'count': {'$inc': 1}}
         d_key = d_value.keys()[0]
-        kw_func = self.KEYWORDS.get(d_key, None)
+        kw_func = self.update_ops.get(d_key, None)
         if kw_func:
             kw_func(doc, key, d_value[d_key])
         else:
@@ -224,8 +228,14 @@ class MongoPy(object):
     def _find_operation_lt(self, compare, value):
         return value < compare
 
+    def _find_operation_ne(self, compare, value):
+        return value != compare
+
     def _find_operation_in(self, compare, value):
         return value in compare
+
+    def _find_operation_all(self, compare, value):
+        return all([True if k in value else False for k in compare])
 
     # update operations
 
