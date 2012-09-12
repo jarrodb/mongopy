@@ -2,6 +2,15 @@
 
 a simple memory store for storing schemaless data (taking cues from MongoDB)
 
+TODO
+----
+
+I'm going to mirror the api of MongoDB, except maintain internal python data
+structures to store the data in memory.  I forsee adding a disk option that
+is dynamic and models MongoDB even more by offering (safe=True) for editing
+data.  I would like to use asyncronous jobs to write to disk when times are
+convenient, but give overrideable access to the user.
+
 Description
 -----------
 
